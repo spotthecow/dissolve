@@ -201,3 +201,7 @@ void platform_pump_events(void) {
     }
   }
 }
+
+void *platform_window_get_metal_layer(PlatformWindow *w) {
+  return (__bridge void *)w->metal_layer;
+}

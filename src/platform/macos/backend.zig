@@ -5,6 +5,7 @@ extern "c" fn platform_window_create(width: c_int, height: c_int, title: [*:0]co
 extern "c" fn platform_window_destroy(window: *Window) void;
 extern "c" fn platform_window_should_close(window: *Window) bool;
 extern "c" fn platform_pump_events() void;
+extern "c" fn platform_window_get_metal_layer(window: *Window) ?*anyopaque;
 
 pub fn init() void {
     platform_init();
@@ -25,4 +26,9 @@ pub fn shouldClose(window: *Window) bool {
 
 pub fn pumpEvents() void {
     platform_pump_events();
+}
+
+pub fn getMetalLayer(window: *Window) error{NoMetalLayer}!*anyopaque {
+    const layer = platform_window_get_metal_layer(window);
+    return layer orelse error.NoMetalLayer;
 }
