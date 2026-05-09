@@ -1,27 +1,36 @@
 const std = @import("std");
-const render = @import("render.zig");
+const gpu = @import("gpu.zig");
 const window = @import("window.zig");
 
+const testing = std.testing;
 const Window = window.Window;
+
+const vk = @import("vulkan");
 
 pub fn main(init: std.process.Init) !void {
     const io = init.io;
+    const gpa = init.gpa;
 
     window.init();
 
-    var instance = try render.createInstance("dissolve");
+    var instance = try gpu.instance.create();
     defer instance.deinit();
-    std.debug.print("Vulkan instance created\n", .{});
 
     const w = try Window.create(1280, 720, "dissolve");
     defer w.destroy();
 
-    var surface = try render.createSurface(&instance, w);
+    var surface = try gpu.surface.create(&instance, w);
     defer surface.deinit();
-    std.debug.print("Vulkan surface created\n", .{});
+
+    var device = try gpu.device.createForSurfaceAlloc(surface, gpa);
+    defer device.deinit();
 
     while (!w.shouldClose()) {
         window.pumpEvents();
         try io.sleep(.fromMilliseconds(16), .awake);
     }
+}
+
+test {
+    testing.refAllDecls(@This());
 }
