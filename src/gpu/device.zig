@@ -7,6 +7,8 @@ pub const Device = struct {
     handle: vk.Device,
     phy: vk.PhysicalDevice,
     wrapper: vk.DeviceWrapper,
+    queue_family: u32,
+    queue: vk.Queue,
 
     pub fn deinit(self: *Device) void {
         self.wrapper.destroyDevice(self.handle, null);
@@ -29,7 +31,7 @@ pub fn createForSurfaceAlloc(surface: Surface, allocator: std.mem.Allocator) !De
     );
     defer allocator.free(queue_family_props);
 
-    const queue_family_idx: u32 = for (queue_family_props, 0..) |prop, i| {
+    const queue_family: u32 = for (queue_family_props, 0..) |prop, i| {
         if (prop.queue_flags.graphics_bit) {
             const supported = try vki.getPhysicalDeviceSurfaceSupportKHR(
                 phy,
@@ -45,7 +47,7 @@ pub fn createForSurfaceAlloc(surface: Surface, allocator: std.mem.Allocator) !De
     const queue_create_info = vk.DeviceQueueCreateInfo{
         .p_queue_priorities = &[_]f32{1.0},
         .queue_count = 1,
-        .queue_family_index = queue_family_idx,
+        .queue_family_index = queue_family,
     };
 
     const exts: []const [*:0]const u8 = &.{vk.extensions.khr_swapchain.name};
@@ -64,10 +66,13 @@ pub fn createForSurfaceAlloc(surface: Surface, allocator: std.mem.Allocator) !De
     const device = try vki.createDevice(phy, &create_info, null);
 
     const vkd = vk.DeviceWrapper.load(device, vki.dispatch.vkGetDeviceProcAddr.?);
+    const queue = vkd.getDeviceQueue(device, queue_family, 0);
 
     return Device{
         .handle = device,
         .phy = phy,
         .wrapper = vkd,
+        .queue_family = queue_family,
+        .queue = queue,
     };
 }

@@ -49,7 +49,8 @@ pub fn create() !Instance {
 }
 
 test "instance functions load" {
-    const instance = try create();
+    var instance = try create();
+    defer instance.deinit();
     const dispatch = instance.wrapper.dispatch;
 
     const required = .{
